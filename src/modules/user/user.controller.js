@@ -24,8 +24,7 @@ async function updateProfile(req, res, next) {
 async function uploadAvatar(req, res, next) {
   try {
     if (!req.file) return res.status(400).json({ ok: false, message: 'No file uploaded' });
-    const base = process.env.SERVER_URL || `http://localhost:${process.env.PORT || 5000}`;
-    const avatarUrl = `${base}/uploads/avatars/${req.file.filename}`;
+    const avatarUrl = req.file.path;           // Cloudinary URL
     const user = await userService.updateProfile(req.user.id, { avatarUrl });
     return success(res, { user, avatarUrl }, 'Avatar updated');
   } catch (err) { next(err); }

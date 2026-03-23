@@ -1,23 +1,21 @@
-const multer = require('multer');
-const path   = require('path');
-const { v4: uuidv4 } = require('uuid');
-const fs = require('fs');
+const multer  = require('multer');
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
-const UPLOAD_DIR = path.join(__dirname, '../../uploads');
-if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key:    process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
-const AVATAR_DIR = path.join(UPLOAD_DIR, 'avatars');
-const FILES_DIR  = path.join(UPLOAD_DIR, 'files');
-if (!fs.existsSync(AVATAR_DIR)) fs.mkdirSync(AVATAR_DIR, { recursive: true });
-if (!fs.existsSync(FILES_DIR))  fs.mkdirSync(FILES_DIR,  { recursive: true });
-
-function makeStorage(subDir) {
-  return multer.diskStorage({
-    destination: (req, file, cb) => cb(null, subDir),
-    filename: (req, file, cb) => {
-      const ext = path.extname(file.originalname).toLowerCase();
-      cb(null, `${uuidv4()}${ext}`);
-    },
+function makeStorage(folder) {
+  return new CloudinaryStorage({
+    cloudinary,
+    params: (req, file) => ({
+      folder,
+      resource_type: 'auto',
+      public_id: `${Date.now()}-${file.originalname.replace(/[^a-zA-Z0-9.]/g, '_')}`,
+    }),
   });
 }
 
@@ -26,7 +24,7 @@ const ALLOWED_FILE  = /jpeg|jpg|png|gif|webp|pdf|doc|docx|txt|zip|mp4|mp3|mov|av
 
 function fileFilter(allowed) {
   return (req, file, cb) => {
-    const ext  = path.extname(file.originalname).toLowerCase().slice(1);
+    const ext  = require('path').extname(file.originalname).toLowerCase().slice(1);
     const mime = file.mimetype.split('/')[1];
     if (allowed.test(ext) || allowed.test(mime)) return cb(null, true);
     cb(new Error('File type not allowed'));
@@ -34,13 +32,13 @@ function fileFilter(allowed) {
 }
 
 exports.avatarUpload = multer({
-  storage: makeStorage(AVATAR_DIR),
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
+  storage: makeStorage('chatsys/avatars'),
+  limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: fileFilter(ALLOWED_IMAGE),
 });
 
 exports.chatFileUpload = multer({
-  storage: makeStorage(FILES_DIR),
-  limits: { fileSize: 20 * 1024 * 1024 }, // 20 MB
+  storage: makeStorage('chatsys/files'),
+  limits: { fileSize: 20 * 1024 * 1024 },
   fileFilter: fileFilter(ALLOWED_FILE),
 });

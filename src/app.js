@@ -17,6 +17,9 @@ const deviceRoutes = require('./modules/device/device.routes');
 
 const app = express();
 
+// Trust reverse proxy (Render, nginx, etc.) for correct protocol/host
+app.set('trust proxy', 1);
+
 // Security
 app.use(helmet());
 app.use(cors({

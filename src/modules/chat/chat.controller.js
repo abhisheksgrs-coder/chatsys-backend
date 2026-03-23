@@ -3,11 +3,6 @@ const { success } = require('../../utils/response');
 const path = require('path');
 const env = require('../../config/env');
 
-function fileUrl(req, filename) {
-  const base = process.env.SERVER_URL || `http://localhost:${process.env.PORT || 5000}`;
-  return `${base}/uploads/files/${filename}`;
-}
-
 async function getMessages(req, res, next) {
   try {
     const userId   = req.user.id;
@@ -55,9 +50,10 @@ async function searchMessages(req, res, next) {
 async function uploadChatFile(req, res, next) {
   try {
     if (!req.file) return res.status(400).json({ ok: false, message: 'No file uploaded' });
-    const base = process.env.SERVER_URL || `http://localhost:${process.env.PORT || 5000}`;
-    const url  = `${base}/uploads/files/${req.file.filename}`;
-    return success(res, { url, fileName: req.file.originalname, fileType: req.file.mimetype });
+    const url      = req.file.path;           // Cloudinary URL
+    const fileName = req.file.originalname;
+    const fileType = req.file.mimetype;
+    return success(res, { url, fileName, fileType });
   } catch (err) { next(err); }
 }
 
