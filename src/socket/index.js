@@ -8,6 +8,7 @@ const { pool } = require('../config/database');
 // Import module-level socket handlers
 const registerChatHandlers   = require('../modules/chat/chat.socket');
 const registerSyncHandlers   = require('../modules/sync/sync.socket');
+const registerCallHandlers   = require('../modules/call/call.socket');
 const { registerDeviceHandlers, setMainIo, setDeviceNs } = require('../modules/device/device.socket');
 
 function initSocket(io) {
@@ -57,6 +58,7 @@ function initSocket(io) {
     // Register feature handlers
     registerChatHandlers(io, socket);
     registerSyncHandlers(io, socket);
+    registerCallHandlers(io, socket);
 
     socket.on('disconnect', () => {
       setOffline(userId, socket.id);
